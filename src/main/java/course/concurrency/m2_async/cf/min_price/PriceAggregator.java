@@ -32,25 +32,19 @@ public class PriceAggregator {
 
         CompletableFuture<Void> voidCompletableFuture = CompletableFuture.allOf(pricesFutures.toArray(CompletableFuture[]::new));
 
-        CompletableFuture<List<Double>> allValuesFuture = voidCompletableFuture.thenApplyAsync(v -> {
-            return pricesFutures
-                    .stream()
-                    .map(value -> value.join())
-                    .collect(Collectors.toList());
-        });
-        CompletableFuture<Double> minValue = allValuesFuture.thenApplyAsync(prices -> {
-            return prices
-                    .stream()
-                    .min(Double::compare)
-                    .get();
-        });
+        CompletableFuture<List<Double>> allValuesFuture = voidCompletableFuture.thenApply(v -> pricesFutures
+                .stream()
+                .map(value -> value.join())
+                .collect(Collectors.toList()));
+        CompletableFuture<Double> minValue = allValuesFuture.thenApply(prices -> prices
+                .stream()
+                .min(Double::compare)
+                .get());
         return minValue.join();
     }
 
     private CompletableFuture<Double> getPrice(long itemId, long shopId) {
-        return CompletableFuture.supplyAsync(() -> {
-            return priceRetriever.getPrice(shopId, itemId);
-        }, executor)
+        return CompletableFuture.supplyAsync(() -> priceRetriever.getPrice(shopId, itemId), executor)
                 .exceptionally(x -> Double.NaN)
                 .completeOnTimeout(Double.NaN, 2800, TimeUnit.MILLISECONDS);
     }
