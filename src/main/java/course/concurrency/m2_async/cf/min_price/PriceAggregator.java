@@ -30,18 +30,16 @@ public class PriceAggregator {
                 .map(shopId -> getPrice(itemId, shopId))
                 .collect(Collectors.toList());
 
-        CompletableFuture<Void> voidCompletableFuture = CompletableFuture.allOf(pricesFutures.toArray(CompletableFuture[]::new));
-
-        CompletableFuture<Double> minFuture = voidCompletableFuture
+        return CompletableFuture.allOf(pricesFutures.toArray(CompletableFuture[]::new))
                 .thenApply(v -> pricesFutures
-                .stream()
-                .map(value -> value.join())
-                .collect(Collectors.toList()))
+                        .stream()
+                        .map(value -> value.join())
+                        .collect(Collectors.toList()))
                 .thenApply(prices -> prices
-                .stream()
-                .min(Double::compare)
-                .get());
-        return minFuture.join();
+                        .stream()
+                        .min(Double::compare)
+                        .get())
+                .join();
     }
 
     private CompletableFuture<Double> getPrice(long itemId, long shopId) {
