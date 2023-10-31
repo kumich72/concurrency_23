@@ -34,9 +34,6 @@ public class PriceAggregator {
                 .thenApply(v -> pricesFutures
                         .stream()
                         .map(value -> value.join())
-                        .collect(Collectors.toList()))
-                .thenApply(prices -> prices
-                        .stream()
                         .min(Double::compare)
                         .get())
                 .join();
