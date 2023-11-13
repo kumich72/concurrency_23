@@ -1,4 +1,7 @@
 package course.concurrency.exams.auction;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class AuctionPessimistic implements Auction {
 
@@ -9,17 +12,27 @@ public class AuctionPessimistic implements Auction {
     }
 
     private Bid latestBid;
+    private final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 
     public boolean propose(Bid bid) {
-        if (bid.getPrice() > latestBid.getPrice()) {
-            notifier.sendOutdatedMessage(latestBid);
-            latestBid = bid;
-            return true;
+        readWriteLock.writeLock().lock();
+        try {
+            if (latestBid == null || bid.getPrice() > latestBid.getPrice()) {
+                notifier.sendOutdatedMessage(latestBid);
+                latestBid = bid;
+                return true;
+            }
+            return false;
+        }finally {
+            readWriteLock.writeLock().unlock();
         }
-        return false;
     }
-
     public Bid getLatestBid() {
-        return latestBid;
+        readWriteLock.readLock().lock();
+        try {
+            return latestBid;
+        } finally {
+            readWriteLock.readLock().unlock();
+        }
     }
 }
