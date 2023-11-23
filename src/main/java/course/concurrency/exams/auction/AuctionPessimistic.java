@@ -12,19 +12,19 @@ public class AuctionPessimistic implements Auction {
     public AuctionPessimistic(Notifier notifier) {
         this.notifier = notifier;
     }
-    private final AtomicReference<Bid> latestBid = new AtomicReference<>();
+    private volatile Bid latestBid ;
     private final Lock lock = new ReentrantLock();
 
     public boolean propose(Bid bid) {
-        if (latestBid.get() == null) {
+        if (latestBid == null) {
             notifier.sendOutdatedMessage(bid);
-            latestBid.set(bid);
+            latestBid = bid;
         }
         lock.lock();
         try {
-            if ( bid.getPrice() > latestBid.get().getPrice()) {
-                notifier.sendOutdatedMessage(latestBid.get());
-                latestBid.set(bid);
+            if ( bid.getPrice() > latestBid.getPrice()) {
+                notifier.sendOutdatedMessage(latestBid);
+                latestBid=bid;
                 return true;
             }
         } finally {
@@ -34,6 +34,6 @@ public class AuctionPessimistic implements Auction {
     }
 
     public Bid getLatestBid() {
-        return latestBid.get();
+        return latestBid;
     }
 }
