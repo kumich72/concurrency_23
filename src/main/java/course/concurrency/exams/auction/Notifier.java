@@ -9,7 +9,9 @@ public class Notifier {
 
     private void imitateSending(Bid bid) {
         CompletableFuture.runAsync(() -> {
-            //System.out.println("Что-то шлем куда-то!" + bid.getPrice());
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {}
         });
     }
 
